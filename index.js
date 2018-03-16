@@ -105,10 +105,17 @@ return /******/ (function(modules) { // webpackBootstrap
 /* harmony default export */ __webpack_exports__["a"] = ({
   data() {
     return {
-      files: []
+      files: [],
+      formData: new FormData()
     };
   },
-  props: ['tbstyle'],
+  props: {
+    tbstyle: { type: Object },
+    autoUpload: {
+      type: Boolean,
+      default: true
+    }
+  },
   mounted() {
     console.log(this.$slots);
     console.log(this.tbstyle);
@@ -120,6 +127,11 @@ return /******/ (function(modules) { // webpackBootstrap
       let compressData = await this.imgCompress(file);
       let dataURL = await this.getDataURL(compressData);
       this.files.push({ name: fileName, src: dataURL });
+      if (this.autoUpload) {
+        let formData = new FormData();
+        formData.append('img', file, fileName);
+        this.uploader('/', formData);
+      } else this.formData.append('img', file, fileName);
     },
     getDataURL(file) {
       return new Promise((res, rej) => {
@@ -141,6 +153,30 @@ return /******/ (function(modules) { // webpackBootstrap
           }
         });
       });
+    },
+    uploader(url, data) {
+      console.log(data);
+      url = 'http://his.noahhealthcare.com/upload/upload?uploadType=project&project=OS&category=CONSULT&recordNo=78';
+      let connect = new XMLHttpRequest();
+      connect.open('POST', url);
+      /* You shouldNEVERset that header yourself. 
+       * We set the header properly with the boundary. 
+       * If you set that header, we won't and your server won't know what boundary to expect 
+       * (since it is added to the header). 
+       * Remove your custom Content-Type header and you'll be fine.
+       * http://stackoverflow.com/questions/17415084/multipart-data-post-using-python-requests-no-multipart-boundary-was-found
+       */
+      // connect.setRequestHeader(
+      //   'Content-type',
+      //   'multipart/form-data'
+      // )
+      connect.onreadystatechange = function () {
+        //Call a function when the state changes.
+        if (connect.readyState == XMLHttpRequest.DONE && connect.status == 200) {
+          // 请求结束后,在此处写处理代码
+        }
+      };
+      connect.send(data);
     }
   }
 });
@@ -153,7 +189,7 @@ return /******/ (function(modules) { // webpackBootstrap
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_13_7_1_vue_loader_lib_selector_type_script_index_0_uploader_vue__ = __webpack_require__(0);
 /* empty harmony namespace reexport */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_13_7_1_vue_loader_lib_template_compiler_index_id_data_v_1645aad6_hasScoped_true_buble_transforms_node_modules_vue_loader_13_7_1_vue_loader_lib_selector_type_template_index_0_uploader_vue__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_13_7_1_vue_loader_lib_template_compiler_index_id_data_v_1949a075_hasScoped_true_buble_transforms_node_modules_vue_loader_13_7_1_vue_loader_lib_selector_type_template_index_0_uploader_vue__ = __webpack_require__(9);
 function injectStyle (ssrContext) {
   __webpack_require__(2)
 }
@@ -168,12 +204,12 @@ var __vue_template_functional__ = false
 /* styles */
 var __vue_styles__ = injectStyle
 /* scopeId */
-var __vue_scopeId__ = "data-v-1645aad6"
+var __vue_scopeId__ = "data-v-1949a075"
 /* moduleIdentifier (server only) */
 var __vue_module_identifier__ = null
 var Component = normalizeComponent(
   __WEBPACK_IMPORTED_MODULE_0__babel_loader_node_modules_vue_loader_13_7_1_vue_loader_lib_selector_type_script_index_0_uploader_vue__["a" /* default */],
-  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_13_7_1_vue_loader_lib_template_compiler_index_id_data_v_1645aad6_hasScoped_true_buble_transforms_node_modules_vue_loader_13_7_1_vue_loader_lib_selector_type_template_index_0_uploader_vue__["a" /* default */],
+  __WEBPACK_IMPORTED_MODULE_1__node_modules_vue_loader_13_7_1_vue_loader_lib_template_compiler_index_id_data_v_1949a075_hasScoped_true_buble_transforms_node_modules_vue_loader_13_7_1_vue_loader_lib_selector_type_template_index_0_uploader_vue__["a" /* default */],
   __vue_template_functional__,
   __vue_styles__,
   __vue_scopeId__,
@@ -194,7 +230,7 @@ var content = __webpack_require__(3);
 if(typeof content === 'string') content = [[module.i, content, '']];
 if(content.locals) module.exports = content.locals;
 // add the styles to the DOM
-var update = __webpack_require__(5)("8a3b7850", content, true, {});
+var update = __webpack_require__(5)("65117294", content, true, {});
 
 /***/ }),
 /* 3 */
@@ -205,7 +241,7 @@ exports = module.exports = __webpack_require__(4)(false);
 
 
 // module
-exports.push([module.i, "#vue-img-uploader[data-v-1645aad6]{display:flex;flex-wrap:wrap}img[data-v-1645aad6]{height:100px;width:100px;object-fit:cover;margin-right:10px;margin-bottom:10px}label>.default[data-v-1645aad6]{display:flex;justify-content:center;align-items:center;font-size:25px;height:100px;width:100px;border:1px solid #333}input[data-v-1645aad6]{position:absolute;top:-100px;left:0}", ""]);
+exports.push([module.i, "#vue-img-uploader[data-v-1949a075]{display:flex;flex-wrap:wrap}img[data-v-1949a075]{height:100px;width:100px;object-fit:cover;margin-right:10px;margin-bottom:10px}label>.default[data-v-1949a075]{display:flex;justify-content:center;align-items:center;font-size:25px;height:100px;width:100px;border:1px solid #333}input[data-v-1949a075]{position:absolute;top:-100px;left:0}", ""]);
 
 // exports
 

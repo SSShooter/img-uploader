@@ -24,10 +24,17 @@ import ImageCompressor from 'image-compressor.js'
 export default {
   data() {
     return {
-      files: []
+      files: [],
+      formData: new FormData()
     }
   },
-  props: ['tbstyle'],
+  props: {
+    tbstyle: { type: Object },
+    autoUpload: {
+      type: Boolean,
+      default: true
+    }
+  },
   mounted() {
     console.log(this.$slots)
     console.log(this.tbstyle)
@@ -39,6 +46,14 @@ export default {
       let compressData = await this.imgCompress(file)
       let dataURL = await this.getDataURL(compressData)
       this.files.push({ name: fileName, src: dataURL })
+      if (this.autoUpload) {
+        let formData = new FormData()
+        formData.append('img', file, fileName)
+        this.uploader('/', formData)
+      } else {
+        this.formData.append('img', file, fileName)
+        this.$emit('update:formData', this.formData)
+      }
     },
     getDataURL(file) {
       return new Promise((res, rej) => {
@@ -60,6 +75,34 @@ export default {
           }
         })
       })
+    },
+    uploader(url, data) {
+      console.log(data)
+      url =
+        'http://his.noahhealthcare.com/upload/upload?uploadType=project&project=OS&category=CONSULT&recordNo=78'
+      let connect = new XMLHttpRequest()
+      connect.open('POST', url)
+      /* You shouldNEVERset that header yourself. 
+       * We set the header properly with the boundary. 
+       * If you set that header, we won't and your server won't know what boundary to expect 
+       * (since it is added to the header). 
+       * Remove your custom Content-Type header and you'll be fine.
+       * http://stackoverflow.com/questions/17415084/multipart-data-post-using-python-requests-no-multipart-boundary-was-found
+       */
+      // connect.setRequestHeader(
+      //   'Content-type',
+      //   'multipart/form-data'
+      // )
+      connect.onreadystatechange = function() {
+        //Call a function when the state changes.
+        if (
+          connect.readyState == XMLHttpRequest.DONE &&
+          connect.status == 200
+        ) {
+          // 请求结束后,在此处写处理代码
+        }
+      }
+      connect.send(data)
     }
   }
 }
@@ -79,7 +122,7 @@ img {
 }
 label > .default {
   display: flex;
-  justify-content:center;
+  justify-content: center;
   align-items: center;
   font-size: 25px;
   height: 100px;
