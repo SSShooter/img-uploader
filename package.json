@@ -1,12 +1,12 @@
 {
-  "name": "image-uploader",
+  "name": "img-uploader",
   "version": "0.0.1",
   "description": "image uploader base on Vue.js",
   "main": "index.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack-dev-server --open --hot",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
-    "vueplugin": "cross-env NODE_ENV=vueplugin webpack --progress --hide-modules"
+    "plugin": "cross-env NODE_ENV=vueplugin webpack --progress --hide-modules"
   },
   "repository": {
     "type": "git",
