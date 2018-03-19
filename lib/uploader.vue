@@ -1,20 +1,18 @@
 <template>
   <div id="vue-img-uploader">
-    <input type="file"
-      name="file"
-      id="file"
-      @change="getFile">
-    <img class="vue-img-thumbnail"
-      v-if="files.length>0"
-      v-for="(img,index) in files"
-      :key="img.name + index"
-      v-gallery:vueImgUploader
-      :src="img.src"
-      :style="tbstyle">
-    <label for="file">
+    <input type="file" id="uploader-get-file" @change="getFile">
+    <template v-if="files.length>0">
+      <div class="vue-thumbnail-wrapper" v-for="(img,index) in files" :key="img.name + index">
+        <div class="del-button" @click="deleteImg(img.name,index)">×</div>
+        <img class="vue-img-thumbnail" v-gallery:vueImgUploader :src="img.src" :style="tbstyle">
+      </div>
+    </template>
+    <div class="loading" v-show="loading" :style="tbstyle">
+      <div class="donut"></div>
+    </div>
+    <label for="uploader-get-file">
       <slot name="addButton"></slot>
-      <div class="default"
-        v-if="!$slots.addButton">+</div>
+      <div class="default" v-if="!$slots.addButton">+</div>
     </label>
   </div>
 </template>
@@ -25,7 +23,8 @@ export default {
   data() {
     return {
       files: [],
-      formData: new FormData()
+      formData: new FormData(),
+      loading: false
     }
   },
   props: {
@@ -33,6 +32,10 @@ export default {
     autoUpload: {
       type: Boolean,
       default: true
+    },
+    compressQuality: {
+      type: Number,
+      default: .6
     }
   },
   mounted() {
@@ -41,19 +44,30 @@ export default {
   },
   methods: {
     async getFile(evt) {
+      this.loading = true
       let file = evt.target.files[0]
       let fileName = file.name
+      // 清除value下次才能选择相同图片
+      document.querySelector('#uploader-get-file').value = null
       let compressData = await this.imgCompress(file)
       let dataURL = await this.getDataURL(compressData)
       this.files.push({ name: fileName, src: dataURL })
+      let index = this.files.length - 1
       if (this.autoUpload) {
         let formData = new FormData()
         formData.append('img', file, fileName)
         this.uploader('/', formData)
       } else {
-        this.formData.append('img', file, fileName)
+        this.formData.append(fileName, file, fileName)
         this.$emit('update:formData', this.formData)
       }
+      this.loading = false
+    },
+    deleteImg(name, index) {
+      console.log(name, index)
+      this.files.splice(index, 1)
+      this.formData.delete(name)
+      this.$emit('update:formData', this.formData)
     },
     getDataURL(file) {
       return new Promise((res, rej) => {
@@ -63,10 +77,10 @@ export default {
         reader.onerror = err => rej(err)
       })
     },
-    imgCompress(file, quality) {
+    imgCompress(file) {
       return new Promise((res, rej) => {
         new ImageCompressor(file, {
-          quality: quality || 0.6,
+          quality: this.compressQuality,
           success(result) {
             res(result)
           },
@@ -103,6 +117,9 @@ export default {
         }
       }
       connect.send(data)
+      connect.upload.addEventListener('progress', function(event) {
+        console.log(event.loaded,event.total)
+      }, false)
     }
   }
 }
@@ -113,14 +130,59 @@ export default {
   display: flex;
   flex-wrap: wrap;
 }
+
+.vue-thumbnail-wrapper {
+  position: relative;
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
+.del-button {
+  position: absolute;
+  padding: 5px;
+  top: 0;
+  right: 0;
+}
+
 img {
   height: 100px;
   width: 100px;
   object-fit: cover;
+}
+
+.loading {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ccc;
+  height: 100px;
+  width: 100px;
   margin-right: 10px;
   margin-bottom: 10px;
 }
-label > .default {
+
+@keyframes donut-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.donut {
+  display: inline-block;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #888;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: donut-spin 1.2s linear infinite;
+}
+
+label>.default {
+  box-sizing: border-box;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -128,7 +190,9 @@ label > .default {
   height: 100px;
   width: 100px;
   border: 1px solid #333;
+  color: #333;
 }
+
 input {
   position: absolute;
   top: -100px;

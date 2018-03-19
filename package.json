@@ -22,7 +22,8 @@
   },
   "homepage": "https://github.com/ssshooter/image-uploader#readme",
   "dependencies": {
-    "image-compressor.js": "^1.1.1"
+    "image-compressor.js": "^1.1.1",
+    "img-vuer": "^0.9.12"
   },
   "browserslist": [
     "> 1%",
