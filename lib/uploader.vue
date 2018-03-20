@@ -2,7 +2,7 @@
   <div id="vue-img-uploader">
     <input type="file"
       accept="image/*"
-      id="uploader-get-file"
+      :id="componentId"
       @change="getFile">
     <template v-if="files.length>0">
       <div class="vue-thumbnail-wrapper"
@@ -22,7 +22,7 @@
       :style="tbstyle">
       <div class="donut"></div>
     </div>
-    <label for="uploader-get-file"
+    <label :for="componentId"
       v-if="files.length<max && !loading">
       <slot name="addButton"></slot>
       <div class="default"
@@ -38,13 +38,14 @@ export default {
     return {
       files: [],
       formData: new FormData(),
-      loading: false
+      loading: false,
+      componentId: 'cid' + Math.floor(Math.random() * 10000)
     }
   },
   props: {
     initialImg: {
       type: Array,
-      default: () => ['https://avatars2.githubusercontent.com/u/541152?v=4']
+      default: () => []
     },
     tbstyle: { type: Object },
     autoUpload: {
@@ -62,6 +63,9 @@ export default {
     max: {
       type: Number,
       default: 9
+    },
+    uploadURL: {
+      type: String
     }
   },
   async mounted() {
@@ -107,7 +111,7 @@ export default {
       let fileName = file.name
       console.log(file)
       // 清除value下次才能选择相同图片
-      document.querySelector('#uploader-get-file').value = null
+      document.querySelector(`#${this.componentId}`).value = null
       let compressData = await this.imgCompress(file) // 压缩后的图片
       let dataURL = await this.getDataURL(compressData) // 转换为dataURL
       // TODO 读入初始图片列表
@@ -116,7 +120,7 @@ export default {
       if (this.autoUpload) {
         let formData = new FormData()
         formData.append('img', compressData, fileName)
-        this.uploader('/', formData) // 及时上传
+        this.uploader(formData) // 即时上传
       } else {
         this.formData.append(fileName, compressData, fileName)
         this.$emit('update:formData', this.formData)
@@ -150,12 +154,11 @@ export default {
         })
       })
     },
-    uploader(url, data) {
+    uploader(data) {
       console.log(data)
-      url =
-        'http://his.noahhealthcare.com/upload/upload?uploadType=project&project=OS&category=CONSULT&recordNo=78'
+      let vm = this
       let connect = new XMLHttpRequest()
-      connect.open('POST', url)
+      connect.open('POST', this.uploadURL)
       /* You shouldNEVERset that header yourself. 
        * We set the header properly with the boundary. 
        * If you set that header, we won't and your server won't know what boundary to expect 
@@ -174,6 +177,7 @@ export default {
           connect.status == 200
         ) {
           // 请求结束后,在此处写处理代码
+          vm.$emit('uploaded', connect.response)
         }
       }
       connect.send(data)
@@ -228,7 +232,6 @@ img {
   height: 100px;
   width: 100px;
   margin-right: 10px;
-  margin-bottom: 10px;
 }
 
 @keyframes donut-spin {
@@ -250,7 +253,7 @@ img {
   animation: donut-spin 1.2s linear infinite;
 }
 
-label > .default {
+label>.default {
   box-sizing: border-box;
   display: flex;
   justify-content: center;
