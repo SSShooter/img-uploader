@@ -1,11 +1,11 @@
 {
   "name": "img-uploader",
-  "version": "0.0.1",
+  "version": "0.0.7",
   "description": "image uploader base on Vue.js",
   "main": "index.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack-dev-server --open --hot",
-    "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
+    "build": "cross-env NODE_ENV=production webpack --progress --hide-modules && cross-env NODE_ENV=vueplugin webpack --progress --hide-modules",
     "plugin": "cross-env NODE_ENV=vueplugin webpack --progress --hide-modules"
   },
   "repository": {
@@ -23,7 +23,7 @@
   "homepage": "https://github.com/ssshooter/image-uploader#readme",
   "dependencies": {
     "image-compressor.js": "^1.1.1",
-    "img-vuer": "^0.9.12"
+    "img-vuer": "^0.9.16"
   },
   "browserslist": [
     "> 1%",
@@ -33,11 +33,13 @@
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
+    "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.6.0",
     "babel-preset-stage-3": "^6.24.1",
     "cross-env": "^5.0.5",
     "css-loader": "^0.28.7",
     "file-loader": "^1.1.4",
+    "uglifyjs-webpack-plugin": "^1.2.4",
     "vue-loader": "^13.0.5",
     "vue-template-compiler": "^2.4.4",
     "webpack": "^3.6.0",

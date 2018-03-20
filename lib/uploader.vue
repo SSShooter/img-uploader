@@ -1,18 +1,32 @@
 <template>
   <div id="vue-img-uploader">
-    <input type="file" id="uploader-get-file" @change="getFile">
+    <input type="file"
+      accept="image/*"
+      id="uploader-get-file"
+      @change="getFile">
     <template v-if="files.length>0">
-      <div class="vue-thumbnail-wrapper" v-for="(img,index) in files" :key="img.name + index">
-        <div class="del-button" @click="deleteImg(img.name,index)">×</div>
-        <img class="vue-img-thumbnail" v-gallery:vueImgUploader :src="img.src" :style="tbstyle">
+      <div class="vue-thumbnail-wrapper"
+        v-for="(img,index) in files"
+        :key="img.name + index">
+        <div class="del-button"
+          @click="deleteImg(img.name,index)">×</div>
+        <img class="vue-img-thumbnail"
+          v-gallery:vueImgUploader
+          :data-index="index"
+          :src="img.src"
+          :style="tbstyle">
       </div>
     </template>
-    <div class="loading" v-show="loading" :style="tbstyle">
+    <div class="loading"
+      v-show="loading"
+      :style="tbstyle">
       <div class="donut"></div>
     </div>
-    <label for="uploader-get-file">
+    <label for="uploader-get-file"
+      v-if="files.length<max && !loading">
       <slot name="addButton"></slot>
-      <div class="default" v-if="!$slots.addButton">+</div>
+      <div class="default"
+        v-if="!$slots.addButton">+</div>
     </label>
   </div>
 </template>
@@ -28,6 +42,10 @@ export default {
     }
   },
   props: {
+    initialImg: {
+      type: Array,
+      default: () => ['https://avatars2.githubusercontent.com/u/541152?v=4']
+    },
     tbstyle: { type: Object },
     autoUpload: {
       type: Boolean,
@@ -35,30 +53,72 @@ export default {
     },
     compressQuality: {
       type: Number,
-      default: .6
+      default: 0.6
+    },
+    maxSize: {
+      type: Number,
+      default: 10 * 1024 * 1024
+    },
+    max: {
+      type: Number,
+      default: 9
     }
   },
-  mounted() {
+  async mounted() {
     console.log(this.$slots)
     console.log(this.tbstyle)
+    for (let i = 0; this.initialImg.length > i; i++) {
+      let url = this.initialImg[i]
+      console.log(url)
+      let blob = await this.url2Blob(url)
+      console.log(blob)
+      this.files.push({ name: `preset${i}`, src: url })
+      if (this.autoUpload) {
+        // 本来就上传了就不管了
+      } else {
+        this.formData.append(`preset${i}`, blob, `preset${i}`)
+        this.$emit('update:formData', this.formData)
+      }
+    }
+  },
+  watch: {
+    async initialImg(list) {
+      console.log('change')
+      list.map(async url => {
+        return await this.url2Blob(url)
+      })
+    }
   },
   methods: {
+    url2Blob(url) {
+      return new Promise((res, rej) => {
+        var xhr = new XMLHttpRequest()
+        xhr.responseType = 'blob'
+        xhr.onload = function() {
+          res(xhr.response)
+        }
+        xhr.open('GET', url)
+        xhr.send()
+      })
+    },
     async getFile(evt) {
       this.loading = true
       let file = evt.target.files[0]
       let fileName = file.name
+      console.log(file)
       // 清除value下次才能选择相同图片
       document.querySelector('#uploader-get-file').value = null
-      let compressData = await this.imgCompress(file)
-      let dataURL = await this.getDataURL(compressData)
+      let compressData = await this.imgCompress(file) // 压缩后的图片
+      let dataURL = await this.getDataURL(compressData) // 转换为dataURL
+      // TODO 读入初始图片列表
       this.files.push({ name: fileName, src: dataURL })
       let index = this.files.length - 1
       if (this.autoUpload) {
         let formData = new FormData()
-        formData.append('img', file, fileName)
-        this.uploader('/', formData)
+        formData.append('img', compressData, fileName)
+        this.uploader('/', formData) // 及时上传
       } else {
-        this.formData.append(fileName, file, fileName)
+        this.formData.append(fileName, compressData, fileName)
         this.$emit('update:formData', this.formData)
       }
       this.loading = false
@@ -117,9 +177,13 @@ export default {
         }
       }
       connect.send(data)
-      connect.upload.addEventListener('progress', function(event) {
-        console.log(event.loaded,event.total)
-      }, false)
+      connect.upload.addEventListener(
+        'progress',
+        function(event) {
+          console.log(event.loaded, event.total)
+        },
+        false
+      )
     }
   }
 }
@@ -134,14 +198,19 @@ export default {
 .vue-thumbnail-wrapper {
   position: relative;
   margin-right: 10px;
-  margin-bottom: 10px;
 }
 
 .del-button {
   position: absolute;
-  padding: 5px;
+  margin: 5px;
   top: 0;
   right: 0;
+  border-radius: 50%;
+  background: #fff;
+  height: 15px;
+  width: 15px;
+  line-height: 15px;
+  text-align: center;
 }
 
 img {
@@ -181,7 +250,7 @@ img {
   animation: donut-spin 1.2s linear infinite;
 }
 
-label>.default {
+label > .default {
   box-sizing: border-box;
   display: flex;
   justify-content: center;

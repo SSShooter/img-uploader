@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import Uploader from '../../image-uploader'
+import Uploader from './uploader'
 export default {
   name: 'Demo',
   components: { Uploader },
