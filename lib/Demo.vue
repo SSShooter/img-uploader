@@ -36,9 +36,6 @@ export default {
       urlList: []
     }
   },
-  watch: {
-    formData(val) { console.log(val) }
-  },
   methods: {
     handleUploaded(res) {
       console.log(res)

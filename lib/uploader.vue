@@ -37,8 +37,8 @@ import ImageCompressor from 'image-compressor.js'
 export default {
   data() {
     return {
-      files: [],
-      formData: new FormData(),
+      files: [], // 展示用列表
+      formData: new FormData(), // 上传用列表
       loading: false,
       componentId: 'cid' + Math.floor(Math.random() * 10000)
     }
@@ -73,7 +73,7 @@ export default {
     this.handleInitialImg()
   },
   watch: {
-    initialImg(list) {
+    initialImg() {
       this.handleInitialImg()
     }
   },
@@ -82,13 +82,13 @@ export default {
       if (this.initialImg.length > 0)
         for (let i = 0; this.initialImg.length > i; i++) {
           let url = this.initialImg[i]
-          console.log(url)
           let blob = await this.url2BlobKai(url)
-          console.log(blob)
+          // 加入展示列表
           this.files.push({ name: `preset${i}`, src: url })
           if (this.autoUpload) {
-            // 本来就上传了就不管了
+            // 本来就上传了所以就不管了
           } else {
+            // 加入上传列表
             this.formData.append(`preset${i}`, blob, `preset${i}`)
             this.$emit('update:formData', this.formData)
           }
@@ -113,7 +113,6 @@ export default {
         img.setAttribute('crossOrigin', 'Anonymous')
         img.src = url
         img.onload = () => {
-          // 坐标(0,0) 表示从此处开始绘制，相当于偏移。
           canvas.width = img.width
           canvas.height = img.height
           canvas.getContext('2d').drawImage(img, 0, 0)
@@ -132,14 +131,15 @@ export default {
       document.querySelector(`#${this.componentId}`).value = null
       let compressData = await this.imgCompress(file) // 压缩后的图片
       let dataURL = await this.getDataURL(compressData) // 转换为dataURL
-      // TODO 读入初始图片列表
+      // 新增图片加入展示列表
       this.files.push({ name: fileName, src: dataURL })
-      let index = this.files.length - 1
       if (this.autoUpload) {
+        // 自动上传
         let formData = new FormData()
         formData.append('img', compressData, fileName)
-        this.uploader(formData) // 即时上传
+        this.uploader(formData)
       } else {
+        // 新增图片加入上传列表
         this.formData.append(fileName, compressData, fileName)
         this.$emit('update:formData', this.formData)
       }
@@ -271,7 +271,7 @@ img {
   animation: donut-spin 1.2s linear infinite;
 }
 
-label > .default {
+label>.default {
   box-sizing: border-box;
   display: flex;
   justify-content: center;
