@@ -2,18 +2,18 @@
   <div id="demo">
     manual upload (data storage in formData)
     <div class="uploader-wrapper">
-      <Uploader :formData.sync="formData"
+      <Uploader :formData.sync="formData1"
         :autoUpload="false" />
     </div>
     manual upload with initial images
     <div class="uploader-wrapper">
-      <Uploader :formData.sync="formData"
+      <Uploader :formData.sync="formData2"
         :autoUpload="false"
         :initialImg="initialImg" />
     </div>
     auto upload 
     <div class="uploader-wrapper">
-      <Uploader :formData.sync="formData"
+      <Uploader :formData.sync="formData3"
         :autoUpload="true"
         uploadURL="http://his.noahhealthcare.com/upload/upload?uploadType=project&project=OS&category=CONSULT&recordNo=78"
         @uploaded="handleUploaded" />
@@ -29,8 +29,10 @@ export default {
   components: { Uploader },
   data() {
     return {
-      initialImg: ['https://avatars2.githubusercontent.com/u/541152?v=4'],
-      formData: '',
+      initialImg: ['https://avatars2.githubusercontent.com/u/541152?v=4','http://122.13.3.33:8083/uploads/OS/CONSULT/2/1c7ef992f97047b1892486aa17c71173.jpg'],
+      formData1: '',
+      formData2: '',
+      formData3: '',
       urlList: []
     }
   },

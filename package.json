@@ -1,6 +1,6 @@
 {
   "name": "img-uploader",
-  "version": "0.0.7",
+  "version": "0.0.10",
   "description": "image uploader base on Vue.js",
   "main": "index.js",
   "scripts": {
@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/ssshooter/image-uploader#readme",
   "dependencies": {
+    "formdata-polyfill": "^3.0.9",
     "image-compressor.js": "^1.1.1",
     "img-vuer": "^0.9.16"
   },

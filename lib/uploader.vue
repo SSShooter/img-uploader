@@ -32,6 +32,7 @@
 </template>
 
 <script>
+require('formdata-polyfill')
 import ImageCompressor from 'image-compressor.js'
 export default {
   data() {
@@ -68,32 +69,31 @@ export default {
       type: String
     }
   },
-  async mounted() {
-    console.log(this.$slots)
-    console.log(this.tbstyle)
-    for (let i = 0; this.initialImg.length > i; i++) {
-      let url = this.initialImg[i]
-      console.log(url)
-      let blob = await this.url2Blob(url)
-      console.log(blob)
-      this.files.push({ name: `preset${i}`, src: url })
-      if (this.autoUpload) {
-        // 本来就上传了就不管了
-      } else {
-        this.formData.append(`preset${i}`, blob, `preset${i}`)
-        this.$emit('update:formData', this.formData)
-      }
-    }
+  mounted() {
+    this.handleInitialImg()
   },
   watch: {
-    async initialImg(list) {
-      console.log('change')
-      list.map(async url => {
-        return await this.url2Blob(url)
-      })
+    initialImg(list) {
+      this.handleInitialImg()
     }
   },
   methods: {
+    async handleInitialImg() {
+      if (this.initialImg.length > 0)
+        for (let i = 0; this.initialImg.length > i; i++) {
+          let url = this.initialImg[i]
+          console.log(url)
+          let blob = await this.url2BlobKai(url)
+          console.log(blob)
+          this.files.push({ name: `preset${i}`, src: url })
+          if (this.autoUpload) {
+            // 本来就上传了就不管了
+          } else {
+            this.formData.append(`preset${i}`, blob, `preset${i}`)
+            this.$emit('update:formData', this.formData)
+          }
+        }
+    },
     url2Blob(url) {
       return new Promise((res, rej) => {
         var xhr = new XMLHttpRequest()
@@ -103,6 +103,24 @@ export default {
         }
         xhr.open('GET', url)
         xhr.send()
+      })
+    },
+    url2BlobKai(url) {
+      return new Promise((res, rej) => {
+        console.log('改！')
+        var canvas = document.createElement('canvas')
+        let img = new Image()
+        img.setAttribute('crossOrigin', 'Anonymous')
+        img.src = url
+        img.onload = () => {
+          // 坐标(0,0) 表示从此处开始绘制，相当于偏移。
+          canvas.width = img.width
+          canvas.height = img.height
+          canvas.getContext('2d').drawImage(img, 0, 0)
+          canvas.toBlob(blob => {
+            res(blob)
+          })
+        }
       })
     },
     async getFile(evt) {
@@ -253,7 +271,7 @@ img {
   animation: donut-spin 1.2s linear infinite;
 }
 
-label>.default {
+label > .default {
   box-sizing: border-box;
   display: flex;
   justify-content: center;
