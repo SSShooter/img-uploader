@@ -1,6 +1,6 @@
 {
   "name": "img-uploader",
-  "version": "0.0.10",
+  "version": "0.0.12",
   "description": "image uploader base on Vue.js",
   "main": "index.js",
   "scripts": {

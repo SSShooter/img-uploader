@@ -40,10 +40,17 @@ export default {
       files: [],
       formData: new FormData(),
       loading: false,
-      componentId: 'cid' + Math.floor(Math.random() * 10000)
     }
   },
   props: {
+    componentId:{
+      type:String,
+      default:'cid' + Math.floor(Math.random() * 10000),
+      validator: function (value) {
+        let hasNotWord = /\W/.test(value)
+        return !hasNotWord
+      }
+    },
     initialImg: {
       type: Array,
       default: () => []
@@ -236,6 +243,7 @@ export default {
 }
 
 img {
+  display: block;
   height: 100px;
   width: 100px;
   object-fit: cover;
