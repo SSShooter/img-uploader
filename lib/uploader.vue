@@ -1,9 +1,5 @@
 <template>
   <div id="vue-img-uploader">
-    <input type="file"
-      accept="image/*"
-      :id="componentId"
-      @change="getFile">
     <template v-if="files.length>0">
       <div class="vue-thumbnail-wrapper"
         v-for="(img,index) in files"
@@ -11,8 +7,7 @@
         <div class="del-button"
           @click="deleteImg(img.name,index)">×</div>
         <img class="vue-img-thumbnail"
-          v-gallery:vueImgUploader
-          :data-index="index"
+          v-gallery:group
           :src="img.src"
           :style="tbstyle">
       </div>
@@ -22,8 +17,8 @@
       :style="tbstyle">
       <div class="donut"></div>
     </div>
-    <label :for="componentId"
-      v-if="files.length<max && !loading">
+    <label v-if="files.length<max && !loading"
+      @click="getFile">
       <slot name="addButton"></slot>
       <div class="default"
         v-if="!$slots.addButton">+</div>
@@ -32,6 +27,7 @@
 </template>
 
 <script>
+// 不能运行，仅提供思路
 require('formdata-polyfill')
 import ImageCompressor from 'image-compressor.js'
 export default {
@@ -39,14 +35,14 @@ export default {
     return {
       files: [], // 展示用列表
       formData: new FormData(), // 上传用列表
-      loading: false,
+      loading: false
     }
   },
   props: {
-    componentId:{
-      type:String,
-      default:'cid' + Math.floor(Math.random() * 10000),
-      validator: function (value) {
+    componentId: {
+      type: String,
+      default: 'cid' + Math.floor(Math.random() * 10000),
+      validator: function(value) {
         let hasNotWord = /\W/.test(value)
         return !hasNotWord
       }
@@ -70,13 +66,14 @@ export default {
     },
     max: {
       type: Number,
-      default: 9
+      default: 5
     },
     uploadURL: {
       type: String
     }
   },
   mounted() {
+    this.$store.dispatch('Wechat', window.location.href.split('#')[0])
     this.handleInitialImg()
   },
   watch: {
@@ -89,7 +86,7 @@ export default {
       if (this.initialImg.length > 0)
         for (let i = 0; this.initialImg.length > i; i++) {
           let url = this.initialImg[i]
-          let blob = await this.url2BlobKai(url)
+          let blob = await this.url2Blob(url)
           // 加入展示列表
           this.files.push({ name: `preset${i}`, src: url })
           if (this.autoUpload) {
@@ -112,59 +109,62 @@ export default {
         xhr.send()
       })
     },
-    url2BlobKai(url) {
-      return new Promise((res, rej) => {
-        console.log('改！')
-        var canvas = document.createElement('canvas')
-        let img = new Image()
-        img.setAttribute('crossOrigin', 'Anonymous')
-        img.src = url
-        img.onload = () => {
-          canvas.width = img.width
-          canvas.height = img.height
-          canvas.getContext('2d').drawImage(img, 0, 0)
-          canvas.toBlob(blob => {
-            res(blob)
-          })
+    dataURItoBlob(dataURI) {
+      var byteString = atob(dataURI.split(',')[1])
+      var mimeString = dataURI
+        .split(',')[0]
+        .split(':')[1]
+        .split(';')[0]
+      var ab = new ArrayBuffer(byteString.length)
+      var ia = new Uint8Array(ab)
+      for (var i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i)
+      }
+      return new Blob([ab], { type: mimeString })
+    },
+    getURL(localId) {
+      return new Promise((resolve, rej) => {
+        let vm = this
+        vm.$wechat.getLocalImgData({
+          localId: localId,
+          success: function(res) {
+            var localData = res.localData // localData是图片的base64数据，可以用img标签显示
+            if (window.__wxjs_is_wkwebview) {
+              // 如果是IOS，需要去掉前缀
+              localData = localData.replace('jgp', 'jpeg')
+            } else {
+              localData = 'data:image/jpeg;base64,' + localData
+            }
+            var blob = vm.dataURItoBlob(localData)
+            // 新增图片加入上传列表
+            vm.formData.append(localId, blob)
+            vm.$emit('update:formData', vm.formData)
+            resolve()
+          }
+        })
+      })
+    },
+    getFile() {
+      let vm = this
+      vm.$wechat.chooseImage({
+        count: 5,
+        sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
+        sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
+        success: async function(res) {
+          var localIds = res.localIds // 返回选定照片的本地ID列表，localId可以作为img标签的src属性显示图片
+          console.log(localIds)
+          // 新增图片加入展示列表
+          for (let i = 0; i < localIds.length; i++) {
+            await vm.getURL(localIds[i])
+            vm.files.push({ name: localIds[i], src: localIds[i] })
+          }
         }
       })
     },
-    async getFile(evt) {
-      this.loading = true
-      let file = evt.target.files[0]
-      let fileName = file.name
-      console.log(file)
-      // 清除value下次才能选择相同图片
-      document.querySelector(`#${this.componentId}`).value = null
-      let compressData = await this.imgCompress(file) // 压缩后的图片
-      let dataURL = await this.getDataURL(compressData) // 转换为dataURL
-      // 新增图片加入展示列表
-      this.files.push({ name: fileName, src: dataURL })
-      if (this.autoUpload) {
-        // 自动上传
-        let formData = new FormData()
-        formData.append('img', compressData, fileName)
-        this.uploader(formData)
-      } else {
-        // 新增图片加入上传列表
-        this.formData.append(fileName, compressData, fileName)
-        this.$emit('update:formData', this.formData)
-      }
-      this.loading = false
-    },
     deleteImg(name, index) {
-      console.log(name, index)
       this.files.splice(index, 1)
       this.formData.delete(name)
       this.$emit('update:formData', this.formData)
-    },
-    getDataURL(file) {
-      return new Promise((res, rej) => {
-        let reader = new FileReader()
-        reader.readAsDataURL(file)
-        reader.onload = evt => res(evt.target.result)
-        reader.onerror = err => rej(err)
-      })
     },
     imgCompress(file) {
       return new Promise((res, rej) => {
@@ -178,41 +178,6 @@ export default {
           }
         })
       })
-    },
-    uploader(data) {
-      console.log(data)
-      let vm = this
-      let connect = new XMLHttpRequest()
-      connect.open('POST', this.uploadURL)
-      /* You shouldNEVERset that header yourself. 
-       * We set the header properly with the boundary. 
-       * If you set that header, we won't and your server won't know what boundary to expect 
-       * (since it is added to the header). 
-       * Remove your custom Content-Type header and you'll be fine.
-       * http://stackoverflow.com/questions/17415084/multipart-data-post-using-python-requests-no-multipart-boundary-was-found
-       */
-      // connect.setRequestHeader(
-      //   'Content-type',
-      //   'multipart/form-data'
-      // )
-      connect.onreadystatechange = function() {
-        //Call a function when the state changes.
-        if (
-          connect.readyState == XMLHttpRequest.DONE &&
-          connect.status == 200
-        ) {
-          // 请求结束后,在此处写处理代码
-          vm.$emit('uploaded', connect.response)
-        }
-      }
-      connect.send(data)
-      connect.upload.addEventListener(
-        'progress',
-        function(event) {
-          console.log(event.loaded, event.total)
-        },
-        false
-      )
     }
   }
 }
@@ -279,7 +244,7 @@ img {
   animation: donut-spin 1.2s linear infinite;
 }
 
-label>.default {
+label > .default {
   box-sizing: border-box;
   display: flex;
   justify-content: center;
