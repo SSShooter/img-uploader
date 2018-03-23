@@ -109,7 +109,7 @@ export default {
         xhr.send()
       })
     },
-    dataURItoBlob(dataURI) {
+    dataURItoBlob(dataURI) {// 重点
       var byteString = atob(dataURI.split(',')[1])
       var mimeString = dataURI
         .split(',')[0]
@@ -129,6 +129,7 @@ export default {
           localId: localId,
           success: function(res) {
             var localData = res.localData // localData是图片的base64数据，可以用img标签显示
+            // 重点
             if (window.__wxjs_is_wkwebview) {
               // 如果是IOS，需要去掉前缀
               localData = localData.replace('jgp', 'jpeg')

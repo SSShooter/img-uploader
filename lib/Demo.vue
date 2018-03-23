@@ -18,7 +18,8 @@
         uploadURL="http://his.noahhealthcare.com/upload/upload?uploadType=project&project=OS&category=CONSULT&recordNo=78"
         @uploaded="handleUploaded" />
     </div>
-
+    <button @click="isShowInput=!isShowInput">upload</button>
+    <textarea type="text" v-if="isShowInput"></textarea>
   </div>
 </template>
 
@@ -33,7 +34,9 @@ export default {
       formData1: '',
       formData2: '',
       formData3: '',
-      urlList: []
+      urlList: [],
+
+      isShowInput:false
     }
   },
   methods: {
@@ -52,5 +55,15 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin: 30px;
+}
+button{
+  height: 40px;
+  width: 80px;
+}
+textarea{
+  resize: none;
+  width: 100%;
+  height: 200px;
+  margin-bottom: 300px;
 }
 </style>
